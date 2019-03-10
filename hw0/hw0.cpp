@@ -2,7 +2,6 @@
 #include <thread>
 #include <stdio.h>
 #include <time.h>
-using namespace std;
 
 void initialize(float* arr, int n){
         int i, j;
@@ -45,7 +44,7 @@ int main()
         const float b = 0.1;
         const float c = 0.4;
         const float t = 0.1;
-        const long n = 10;
+        const long n = 10000;
         float *x; //pointer
         float *y; //pointer
 

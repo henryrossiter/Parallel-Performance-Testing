@@ -2,21 +2,22 @@
 #include <thread>
 #include <stdio.h>
 #include <time.h>
-using namespace std;
+#include <omp.h>
+#include <cstdint>
 
-void initialize(float* arr, int n){
-        int i, j;
-        for (i = 0; i < n; i++)
+void initialize(float* arr, uint64_t n){
+        for (size_t i = 0; i < n; i++)
         {
-                for (j = 0; j < n; j++)
+                for (size_t j = 0; j < n; j++)
                 {
                 arr[i*n+j] = rand()/(float)RAND_MAX;
                 }
         }
 }
 
-void smooth(float* inArr, float* outArr, int n, float a, float b, float c){
+void smooth(float* inArr, float* outArr, uint64_t n, float a, float b, float c){
         int i, j;
+        #pragma omp parallel for private(i, j)
         for (i = 1; i < n-1; i++)
         {
                 for (j = 1; j < n-1; j++)
@@ -24,10 +25,12 @@ void smooth(float* inArr, float* outArr, int n, float a, float b, float c){
                         outArr[i*n+j] = a * (inArr[(i - 1)*n+j - 1] + inArr[(i - 1)*n+j + 1] + inArr[(i + 1)*n+j - 1] + inArr[(i + 1)*n+j + 1]) + b * (inArr[(i)*n+j - 1] + inArr[(i)*n+j + 1] + inArr[(i - 1)*n+j] + inArr[(i + 1)*n+j]) + c * (inArr[(i)*n+j]);
                 }
         }
+
 }
 
-void count(float* arr, int n, float threshold, long &cnt){
+void count(float* arr, uint64_t n, float threshold, uint64_t &cnt){
         int i, j;
+        #pragma omp parallel for reduction(+:cnt) private(i, j)
         for (i = 1; i < n-1; i++)
         {
                 for (j = 1; j < n-1; j++)
@@ -38,6 +41,7 @@ void count(float* arr, int n, float threshold, long &cnt){
                         }
                 }
         }
+
 }
 int main()
 {
@@ -45,16 +49,21 @@ int main()
         const float b = 0.1;
         const float c = 0.4;
         const float t = 0.1;
-        const long n = 10;
+        const uint64_t n = 98304;
         float *x; //pointer
         float *y; //pointer
-
+        uint64_t memNeeded = n*n*sizeof(float);
+        int numThreads;
         clock_t start;
         float times[6];
 
-        long memNeeded = (long) n*n*sizeof(float);
-        start = clock(); //start clock
+        #pragma omp parallel
+        {
+                printf ("This is thread num %i\n", omp_get_thread_num() );
+                numThreads = omp_get_num_threads();
+        }
 
+        start = clock(); //start clock
 
         x = (float*)malloc(memNeeded);
 
@@ -67,13 +76,15 @@ int main()
         start = clock(); //restart clock
 
         //x and y are now allocated
+        printf("%u got this far\n", 0);
 
         initialize(x, n);
+
+        printf("%u got this far\n", 0);
 
         times[2] = (clock() - start)/(float) CLOCKS_PER_SEC;
         start = clock(); //restart clock
         //now x is populated
-
         smooth(x, y, n, a, b, c);
 
         times[3] = (clock() - start)/(float) CLOCKS_PER_SEC;
@@ -81,8 +92,8 @@ int main()
 
         //y is now populated, a 'smoothed' version of x
 
-        long countx = 0;
-        long county = 0;
+        uint64_t countx = 0;
+        uint64_t county = 0;
 
         count(x, n, t, countx);
 
@@ -95,6 +106,7 @@ int main()
         //Print summary
         printf("Summary\n");
         printf("-----------------------------------------------\n");
+        printf("Number of threads used in parallel region:   %u\n", numThreads);
         printf("Number of elements in a row/column:          %u\n", n);
         printf("Number of inner elements in a row/column:    %u\n", n-2);
         printf("Total number of elements:                    %lu\n", n*n);
