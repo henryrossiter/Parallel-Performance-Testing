@@ -1,0 +1,27 @@
+This directory tree contains the examples for Using MPI, 2nd edition.
+
+This collection uses configure to create the Makefiles that can be used to 
+build and run the applications.  For example, to use MPICH, use
+
+./configure --with-mpich
+
+To use a specific MPICH, give the directory that contains the compilation
+commands (e.g., mpicc):
+
+./configure --with-mpich=/usr/local/mpich-1.2.1/bin
+
+To use other implementation of MPI, use:
+
+IBM:
+
+./configure --with-ibmmpi
+
+SGI:
+
+./configure --with-sgimpi
+
+
+
+
+
+

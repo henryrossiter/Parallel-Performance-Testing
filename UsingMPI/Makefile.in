@@ -1,0 +1,24 @@
+SHELL= @SHELL@ 
+@SET_MAKE@
+
+SUBDIRS = simplempi intermediate advmsg libraries advanced
+
+all:
+	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
+allf90:
+	for dir in ${SUBDIRS} ; do if [ -d $$dir/f90 ] ; then \
+		( cd $$dir/f90 ; ${MAKE} all ) ; fi ; done
+run:
+	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} run ) ; done
+runf90:
+	for dir in ${SUBDIRS} ; do if [ -d $$dir/f90 ] ; then \
+		( cd $$dir/f90 ; ${MAKE} run ) ; fi ; done
+
+clean:
+	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} clean ) ; done
+
+distclean: clean
+	rm config.log config.status config.cache config.system
+
+configure: configure.in
+	autoconf-2.13 -l /homes/gropp/sowing-proj/sowing/confdb

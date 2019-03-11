@@ -1,0 +1,36 @@
+AC_INIT(Makefile.in)
+AC_PREREQ(2.13) dnl needed for SHELL, added in 2.13
+
+PAC_ARG_CACHING
+
+AC_ARG_ENABLE(echo,
+[--enable-echo    - Turn on echoing from within the configure script],
+set -x)
+
+PAC_ARG_MPI_TYPES
+
+PAC_PROG_CXX_TEMPLATE_DIR(CXX_TEMPLATE_DIR)
+AC_SUBST(CXX_TEMPLATE_DIR)
+
+MPIRUN=mpirun
+NP_ARG="-np "
+AC_SUBST(MPIRUN)
+AC_SUBST(NP_ARG)
+
+dnl Checks for programs
+PAC_PROG_MAKE
+
+AC_SEARCH_LIBS(fabs,m)
+
+# Check for mpi.h
+AC_CHECK_HEADER(mpi.h,,
+AC_MSG_ERROR([mpi.h is required])
+)
+
+AC_OUTPUT(Makefile \
+	  simplempi/Makefile simplempi/f90/Makefile \
+          intermediate/Makefile intermediate/f90/Makefile \
+	  advanced/Makefile advanced/f90/Makefile \
+	  advmsg/Makefile \
+	  libraries/Makefile \
+)

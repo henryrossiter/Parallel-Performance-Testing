@@ -1,0 +1,7 @@
+#!/bin/bash
+
+icc  -c  timer.c
+rm -f a.out
+
+echo icc timer.o part1.c -o a.out
+     icc timer.o part1.c -o a.out

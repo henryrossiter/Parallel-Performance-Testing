@@ -1,0 +1,23 @@
+SHELL = @SHELL@
+F90   = @F90@
+LIBS  = @LIBS@
+MPIRUN= @MPIRUN@
+NP_ARG= @NP_ARG@
+
+PROGRAMS = 
+
+SOURCES = exchng1nb.f90 expair1d.f90 exsandr1d.f90
+
+all: ${PROGRAMS}
+
+clean:
+	rm -f *.o ${PROGRAMS} *~
+
+.SUFFIXES: .o .f90
+.f90:
+	${F90} ${F90FLAGS} -o $* $< ${LIBS}
+.f90.o:
+	${F90} ${F90FLAGS} -c $<
+
+sources:
+	@echo ${SOURCES}

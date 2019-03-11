@@ -1,0 +1,54 @@
+SHELL = @SHELL@
+CC    = @CC@
+F77   = @F77@
+CXX   = @CXX@
+F90   = @F90@
+MAKE  = @MAKE@
+LIBS  = @LIBS@
+MPIRUN= @MPIRUN@
+NP_ARG= @NP_ARG@
+
+all: all-redirect
+
+PROGRAMS = oned twod
+
+oned_SOURCES = onedbase.f sweep.f diff.f exchng1.f decomp.f
+twod_SOURCES = twodbase.f sweep2.f diff2d.f exchng2.f decomp.f fndnbr2d.f
+
+oned_OBJECTS = onedbase.o sweep.o diff.o exchng1.o decomp.o
+twod_OBJECTS = twodbase.o sweep2.o diff2d.o exchng2.o decomp.o fndnbr2d.o
+
+SOURCES = ${oned_SOURCES} ${twod_SOURCES} oned.f twod.f
+
+oned: oned.o ${oned_OBJECTS}
+	${F77} -o oned oned.o ${oned_OBJECTS} ${LIBS}
+twod: twod.o ${twod_OBJECTS}
+	${F77} -o twod twod.o ${twod_OBJECTS} ${LIBS}
+
+
+all-redirect: ${PROGRAMS}
+
+clean:
+	rm -f *.o ${PROGRAMS} *~ PI*
+	(cd f90 ; ${MAKE} clean)
+
+.SUFFIXES: .o .c .f .cc .f90
+.c:
+	${CC} ${CFLAGS} -o $* $< ${LIBS} 
+.c.o:
+	${CC} ${CFLAGS} -c $<
+.f:
+	${F77} ${FFLAGS} -o $* $< ${LIBS}
+.f.o:
+	${F77} ${FFLAGS} -c $<
+.f90:
+	${F90} ${F90FLAGS} -o $* $< ${LIBS}
+.cc:
+	${CXX} ${CXXFLAGS} -o $* $< ${LIBS} 
+
+run: ${PROGRAMS}
+	${MPIRUN} ${NP_ARG} 4 oned
+	${MPIRUN} ${NP_ARG} 2 twod
+
+sources:
+	@echo ${SOURCES}

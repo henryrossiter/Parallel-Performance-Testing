@@ -1,0 +1,54 @@
+SHELL = @SHELL@
+CC    = @CC@
+F77   = @F77@
+CXX   = @CXX@
+F90   = @F90@
+MAKE  = @MAKE@
+LIBS  = @LIBS@
+MPIRUN= @MPIRUN@
+NP_ARG= @NP_ARG@
+
+all: all-redirect
+
+PROGRAMS = nxtval-test icnxtval-test
+
+nxtval-test_SOURCES = nxtval.c nxtval_create.c nxtval_free.c
+nxtval-test_OBJECTS = nxtval.o nxtval_create.o nxtval_free.o
+
+icnxtval-test_SOURCES = ic_nxtval.c ic_nxtval_create1.c ic_nxtval_free.c
+icnxtval-test_OBJECTS = ic_nxtval.o ic_nxtval_create1.o ic_nxtval_free.o
+
+SOURCES = ${nxtval-test_SOURCES} ${icnxtval-test_SOURCES}
+
+nxtval-test: nxtval-test.o ${nxtval-test_OBJECTS}
+	${CC} -o nxtval-test nxtval-test.o ${nxtval-test_OBJECTS} ${LIBS}
+
+icnxtval-test: icnxtval-test.o ${icnxtval-test_OBJECTS}
+	${CC} -o icnxtval-test icnxtval-test.o ${icnxtval-test_OBJECTS} ${LIBS}
+
+all-redirect: ${PROGRAMS}
+
+clean:
+	rm -f *.o ${PROGRAMS} *~ PI*
+	(cd f90 ; ${MAKE} clean)
+
+.SUFFIXES: .o .c .f .cc .f90
+.c:
+	${CC} ${CFLAGS} -o $* $< ${LIBS} 
+.c.o:
+	${CC} ${CFLAGS} -c $<
+.f:
+	${F77} ${FFLAGS} -o $* $< ${LIBS}
+.f.o:
+	${F77} ${FFLAGS} -c $<
+.f90:
+	${F90} ${F90FLAGS} -o $* $< ${LIBS}
+.cc:
+	${CXX} ${CXXFLAGS} -o $* $< ${LIBS} 
+
+run: ${PROGRAMS}
+	${MPIRUN} ${NP_ARG} 4 nxtval-test
+	${MPIRUN} ${NP_ARG} 4 icnxtval-test
+
+sources:
+	@echo ${SOURCES}
