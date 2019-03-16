@@ -2,5 +2,5 @@
 
 rm -f a.out
 
-echo icc -qopenmp -O2 -xCORE-AVX512 part1.c
-     icc -qopenmp -O2 -xCORE-AVX512 part1.c
+echo icc -qopenmp -O2 -axCORE-AVX512 part1.c
+     icc -qopenmp -O2 -axCORE-AVX512 part1.c

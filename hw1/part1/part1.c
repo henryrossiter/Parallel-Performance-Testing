@@ -20,7 +20,6 @@ double gtod_timer(){
 }
 
 void initialize(float *arr, uint64_t n){
-{
 	for (uint64_t i = 0; i < n; i++)
         {
                 for (uint64_t j = 0; j < n; j++)
@@ -28,7 +27,6 @@ void initialize(float *arr, uint64_t n){
                 arr[i*n+j] = rand()/(float)RAND_MAX;
                 }
         }
-	printf("starting%u\n",3);
 }
 
 void smooth(float *inArr, float *outArr, uint64_t n, float a, float b, float c){
@@ -87,7 +85,6 @@ int main()
         x = (float*)malloc(memNeeded);
 
         times[0] = gtod_timer();
-
 
         y = (float*)malloc(memNeeded);
 
