@@ -24,6 +24,8 @@ int main() {
 
    t0 = gtod_timer();
 
+   #pragma omp single
+  {
    do {
         #pragma omp single
 	error=0.0; niter++;
@@ -36,10 +38,11 @@ int main() {
         }
 
    } while (error >= 1.0);
+  }
+
 
    t1 = gtod_timer();
    time  = t1 - t0;
 
    printf("%lf\n",time);
 }
-
