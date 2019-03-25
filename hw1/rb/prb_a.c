@@ -24,14 +24,13 @@ int main() {
 
    t0 = gtod_timer();
 
-  #pragma omp parallel
   do {
-	#pragma omp for
+	#pragma omp parallel for
      	for (i = 1; i < N;   i+=2) {
 		a[i] = (a[i] + a[i-1]) / 2.0;
 	}
 
-	#pragma omp for
+	#pragma omp parallel for
      	for (i = 0; i < N-1; i+=2) {
  		a[i] = (a[i] + a[i+1]) / 2.0;
 	}
@@ -39,7 +38,7 @@ int main() {
 
   error=0.0; niter++;
 
-	#pragma omp for reduction(+:error)
+	#pragma omp parallel for reduction(+:error)
      	for (i = 0; i < N-1; i++){
     		error = error + fabs(a[i] - a[i+1]);
     	}
