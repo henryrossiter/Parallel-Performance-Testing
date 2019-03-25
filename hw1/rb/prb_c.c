@@ -29,15 +29,11 @@ int main() {
 
 
   do {
-
+    //combined red and black loopsa
   	#pragma omp for
-       	for (i = 1; i < N;   i+=2) {
+    for (i = 1; i < N;   i+=2) {
   		a[i] = (a[i] + a[i-1]) / 2.0;
-  	}
-
-  	#pragma omp for
-       	for (i = 0; i < N-1; i+=2) {
-   		a[i] = (a[i] + a[i+1]) / 2.0;
+   		a[i] = (a[i-1] + a[i]) / 2.0;
   	}
 
     #pragma omp single
