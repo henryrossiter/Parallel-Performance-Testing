@@ -18,13 +18,16 @@ int main() {
 #pragma omp parallel private(nt)
 { nt = omp_get_num_threads(); if(nt<1) printf("NO print, OMP warmup.\n"); }
 #endif
-   //initialization loop, only parallel for a.v and a.vi
-   #pragma omp parallel for
+
+   #pragma omp parallel
+{
+   #pragma omp for
    for(i = 0; i < N-1; i+=2) {a[i]   = 0.0; a[i+1] = 1.0; }
 
+   #pragma omp single
    t0 = gtod_timer();
-   #pragma omp parallel
-     {
+
+
   do {
 
   	#pragma omp for
@@ -45,9 +48,8 @@ int main() {
       		error = error + fabs(a[i] - a[i+1]);
       	}
     } while (error >= 1.0);
-  }
+}
    t1 = gtod_timer();
    time  = t1 - t0;
-
    printf("%lf\n",time);
 }
