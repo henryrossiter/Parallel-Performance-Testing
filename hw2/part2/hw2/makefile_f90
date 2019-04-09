@@ -1,0 +1,31 @@
+# Assignment 2 pi
+
+F90 = mpif90
+
+ppi: ppi.o
+	$(F90) ppi.o -o ppi 
+
+ppi.o: ppi.f90
+	$(F90) -O3 -xHOST -c ppi.f90  -o ppi.o
+
+pi: pi.o 
+	$(F90) pi.o -o pi 
+
+pi.o: pi.f90
+	$(F90) -O3 -xHOST -c pi.f90  -o pi.o
+
+ppi_weak: ppi_weak.o
+	$(F90) ppi_weak.o -o ppi_weak 
+
+ppi_weak.o: ppi_weak.f90
+	$(F90) -O3 -xHOST -c ppi_weak.f90  -o ppi_weak.o
+
+ppi_mr: ppi_mr.o
+	$(F90) ppi_mr.o -o ppi_mr
+
+ppi_mr.o: ppi_mr.f90
+	$(F90) -O3 -xHOST -c ppi_mr.f90  -o ppi_mr.o
+
+clean:
+	rm -rf *.o core ppi pi ppi_weak ppi_mr
+

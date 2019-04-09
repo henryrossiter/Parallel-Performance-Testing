@@ -1,6 +1,0 @@
-#!/bin/bash
-
-rm -f a.out
-
-echo icc -O2 -axCORE-AVX512 part1.c
-     icc -O2 -axCORE-AVX512 part1.c

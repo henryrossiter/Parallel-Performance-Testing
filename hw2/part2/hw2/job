@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#SBATCH -J PCSE_pi     # Job name
+#SBATCH -o myjob.o%j   # Name of stdout output file (%j expands to jobId)
+#SBATCH -p normal # Queue name
+#SBATCH -N 1           # Total number of mpi tasks requested
+#SBATCH -n 16          # Total number of mpi tasks requested
+#SBATCH -t 00:05:00    # Run time (hh:mm:ss) - 5 minutes
+
+#SBATCH -A TACC-PCSE   # <-- Allocation name to charge job against
+
+# Comment the script for to run one or all of the sections that
+# you want to run on a dedicated node.
+# pi = pi integration
+
+date
+
+echo "Working on Serial Execution"
+
+./ppi < 2k_intervals
+./ppi < 2m_intervals
+
+
+echo "Working on Parallel Execution"
+
+ibrun ./ppi < 2k_intervals
+ibrun ./ppi < 2m_intervals

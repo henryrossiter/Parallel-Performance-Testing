@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo ibrun a.out
+     ibrun a.out

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm -f a.out
+
+echo mpicc -O2 -xCORE-AVX2 part1.c
+     mpicc -O2 -xCORE-AVX2 part1.c
