@@ -64,7 +64,7 @@ int main( int argc, char *argv[] )
         const uint64_t n = 67;// 98306;
         float *x; //pointer
         float *y; //pointer
-        uint64_t memNeeded = n*n*sizeof(float);
+        uint64_t memPerProc = n*n*sizeof(float);
         
 	double start;
         double times[6];
