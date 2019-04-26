@@ -278,14 +278,14 @@ int main( int argc, char *argv[] )
         	printf("Number   of elements below threshold (y)     %u\n", county);
         	printf("Fraction of elements below threshold (y)     %1.8f\n",(float)county/(n-2)/(n-2));
 
-	printf ("Process         time(s)    resolution: 1.0e-04\n");
-      	printf ("-----------------------\n");
-      	printf ("Allocate-x:     %4.3f\n", times[0]-start);
-      	printf ("Allocate-y:     %4.3f\n", times[1]-times[0]);
-      	printf ("Initialize-x:   %4.3f\n", times[2]-times[1]);
-      	printf ("Smooth:         %4.3f\n", times[3]-times[2]);
-      	printf ("Count-x:        %4.3f\n", times[4]-times[3]);
-      	printf ("Count-y:        %4.3f\n", times[5]-times[4]);
+  	printf ("Process         time(s)    resolution: 1.0e-04\n");
+        	printf ("-----------------------\n");
+        	printf ("Allocate-x:     %4.3f\n", times[0]-start);
+        	printf ("Allocate-y:     %4.3f\n", times[1]-times[0]);
+        	printf ("Initialize-x:   %4.3f\n", times[2]-times[1]);
+        	printf ("Smooth:         %4.3f\n", times[3]-times[2]);
+        	printf ("Count-x:        %4.3f\n", times[4]-times[3]);
+        	printf ("Count-y:        %4.3f\n", times[5]-times[4]);
 	}
 
 	MPI_Finalize();
