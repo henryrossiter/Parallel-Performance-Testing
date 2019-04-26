@@ -1,4 +1,4 @@
 #!/bin/bash
 
-echo ibrun a.out
-     ibrun a.out
+echo ibrun -np 4 a.out
+     ibrun -np 4 a.out

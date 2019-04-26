@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 #include <stdint.h>
 #include <sys/time.h>
 #include <mpi.h>
@@ -24,8 +25,10 @@ double gtod_timer(){
 void initialize(float *arr, uint64_t n){
         for (uint64_t i = 0; i < n; i++)
         {
-                arr[i] = rand()/(float)RAND_MAX;
-        }
+         
+		arr[i] = rand()/(float)RAND_MAX;
+        	//if (i%10 == 0) printf("next random number in spot %d is  %f\n",i, arr[i]);
+	}
 }
 
 void smooth(float *inArr, float *outArr, float *colLeft, float *colRight, float *rowAbove, float *rowBelow, uint64_t n, float a, float b, float c){
@@ -45,11 +48,11 @@ void smooth(float *inArr, float *outArr, float *colLeft, float *colRight, float 
 
                         // left and right border conditions
                         if (j == 0) {
-                          outArr[i*n+j] = outArr[i*n+j] + ( b * (colLeft[i] + inArr[(i)*n+j + 1] );
+                          outArr[i*n+j] = outArr[i*n+j] + ( b * (colLeft[i] + inArr[(i)*n+j + 1]) );
                         } else if (j == n - 1) {
-                          outArr[i*n+j] = outArr[i*n+j] + ( b * (inArr[(i)*n+j - 1] + colRight[i] );
+                          outArr[i*n+j] = outArr[i*n+j] + ( b * (inArr[(i)*n+j - 1] + colRight[i]) );
                         } else {
-                          outArr[i*n+j] = outArr[i*n+j] + ( b * (inArr[(i)*n+j - 1] + inArr[(i)*n+j + 1] );
+                          outArr[i*n+j] = outArr[i*n+j] + ( b * (inArr[(i)*n+j - 1] + inArr[(i)*n+j + 1]) );
                         }
                 }
         }
@@ -65,13 +68,13 @@ void count(int *my_coord, int gridSize, float *arr, uint64_t n, float threshold,
 
         //dont count the edges of the edge processes
         if (my_coord[0] == 0) {
-          i = 1
+          i = 1;
         }if (my_coord[0] == gridSize - 1) {
-          iend = n - 1
+          iend = n - 1;
         }if (my_coord[1] == 0) {
-          j = 1
+          j = 1;
         }if (my_coord[1] == gridSize - 1) {
-          jend = n - 1
+          jend = n - 1;
         }
 
         for (i = 0; i < iend; i++)
@@ -93,28 +96,27 @@ int main( int argc, char *argv[] )
   const float a = 0.05;
   const float b = 0.1;
   const float c = 0.4;
-  const float t = 0.1;
-  const uint64_t n = 67;
+  const float t = 0.15;
+  const uint64_t n = 15800;
   const uint64_t elementsPerProc = n*n;
   const uint64_t memPerProc = elementsPerProc*sizeof(float);
-  int i;
 
 
   float *x; //pointer
   float *y; //pointer
 
-	double start;
+  double start;
   double times[6];
 
   int myid, numprocs;
 
-	MPI_Status status;
-	MPI_Init(&argc,&argv);
+  MPI_Status status;
+  MPI_Init(&argc,&argv);
   MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-
-	printf("Hello world from %d of %d processors\n",myid, numprocs);
-
+  
+  printf("Hello world from %d of %d processors\n",myid, numprocs);
+  int gridSize = sqrt(numprocs);
 
   //mpi cartesian grid
   //create a grid of processes
@@ -138,7 +140,7 @@ int main( int argc, char *argv[] )
   MPI_Cart_rank(comm2d, my_coord, &rank_2d);
   printf("I am %d: (%d,%d); originally %d\n", rank_2d, my_coord[0], my_coord[1], myid );
 
-	start = gtod_timer(); //start clock
+  start = gtod_timer(); //start clock
 
   x = (float*)malloc(memPerProc);
 
@@ -149,64 +151,67 @@ int main( int argc, char *argv[] )
   times[1] = gtod_timer();
   //start of initialization kernel a
 
-	if (myid == 0) {
+	if (rank_2d == 0) {
 		//for each process, make a random array and send it
 
 		for (int islave = 1; islave < numprocs; islave++) {
+		
 			initialize(x, elementsPerProc);
-			MPI_Send(x, elementsPerProc, MPI_INTEGER, islave, MTAG1, MPI_COMM_WORLD);
+		
+			MPI_Ssend(x, elementsPerProc, MPI_INTEGER, islave, MTAG1, comm2d);
 		}
 
-    //initialize "my own" array
-    initialize(x, elementsPerProc);
+    	//initialize "my own" array
+    	initialize(x, elementsPerProc);
 
 	} else {
-		MPI_Recv(x, elementsPerProc, MPI_INTEGER, 0, MTAG1, MPI_COMM_WORLD, &status);
+		
+		MPI_Recv(x, elementsPerProc, MPI_INTEGER, 0, MTAG1, comm2d, &status);
+		
 	}
-
-	printf(" Thread %d 's array starts with %d",myid, x[0]);
-
   //end of initialization kernel a
   times[2] = gtod_timer();
 
-  int gridSize = sqrt(numprocs)
+  float colLeft[n];
+  float colRight[n];
+  float rowAbove[n];
+  float rowBelow[n];
 
-  float colLeft[gridSize];
-  float colRight[gridSize];
-  float rowAbove[gridSize];
-  float rowBelow[gridSize];
+  float myColLeft[n];
+  float myColRight[n];
+  float myRowTop[n];
+  float myRowBottom[n];
 
   int ind;
+  int i;
 
   //store current processes left column in an array
   ind = 0;
-  float myColLeft[gridSize];
   for (i = 0; i< elementsPerProc; i++) {
     if (i % n == 0) {
-      myLeftColumn[ind] = x[i];
-      ind = ind + 1
+      myColLeft[ind] = x[i];
+      ind = ind + 1;
     }
   }
 
   //store current processes Right column in an array
   ind = 0;
-  float myColRight[gridSize];
   for (i = 0; i < elementsPerProc; i++) {
-    if (i % n == n - 1) {
-      myRightColumn[ind] = x[i];
-      ind = ind + 1
+    if (i % n == 0) {
+      myColRight[ind] = x[i];
+      ind = ind + 1;
     }
   }
 
-  float myRowTop[gridSize];
   for (i=0; i < n; i++){
-    myTopRow[i] = x[i]
+    myRowTop[i] = x[i];
   }
 
-  float myRowBottom[gridSize];
   for (i=0; i < n; i++){
-    myBottomRow[i] = x[elementsPerProc - n + i]
+    myRowBottom[i] = x[elementsPerProc - n + i];
   }
+
+  int rank_left, rank_right, rank_up, rank_down;
 
   MPI_Cart_shift(comm2d,0,+1,&rank_2d,&rank_right);
   MPI_Cart_shift(comm2d,0,-1,&rank_2d,&rank_left);
@@ -218,29 +223,28 @@ int main( int argc, char *argv[] )
 
   //send to rank_left
   if (my_coord[0] > 0) {
-    MPI_Isend( myColLeft,1,MPI_FLOAT,rank_left,  0,comm, requests+irequest++);
-    MPI_Irecv( colLeft, 1,MPI_FLOAT, rank_left,  0,comm, requests+irequest++);
+    MPI_Isend( myColLeft,1,MPI_FLOAT,rank_left,  0,comm2d, requests+irequest++);
+    MPI_Irecv( colLeft, 1,MPI_FLOAT, rank_left,  0,comm2d, requests+irequest++);
   }
 
   //send to rank_right
   if (my_coord[0] < gridSize - 1) {
-    MPI_Isend( myColRight ,1,MPI_FLOAT,rank_right, 0,comm, requests+irequest++);
-    MPI_Irecv( colRight, 1,MPI_FLOAT, rank_right, 0,comm, requests+irequest++);
+    MPI_Isend( myColRight ,1,MPI_FLOAT,rank_right, 0,comm2d, requests+irequest++);
+    MPI_Irecv( colRight, 1,MPI_FLOAT, rank_right, 0,comm2d, requests+irequest++);
   }
 
   //send to rank_up
   if (my_coord[1] > 0) {
-    MPI_Isend( myRowTop,1,MPI_FLOAT,rank_up, 0,comm, requests+irequest++);
-    MPI_Irecv( rowAbove, 1,MPI_FLOAT, rank_up, 0,comm, requests+irequest++);
+    MPI_Isend( myRowTop,1,MPI_FLOAT,rank_up, 0,comm2d, requests+irequest++);
+    MPI_Irecv( rowAbove, 1,MPI_FLOAT, rank_up, 0,comm2d, requests+irequest++);
   }
 
   //send to rank_down
   if (my_coord[1] < gridSize - 1) {
-    MPI_Isend( myRowBottom,1,MPI_FLOAT,rank_down, 0,comm, requests+irequest++);
-    MPI_Irecv( rowBelow, 1,MPI_FLOAT, rank_down, 0,comm, requests+irequest++);
+    MPI_Isend( myRowBottom,1,MPI_FLOAT,rank_down, 0,comm2d, requests+irequest++);
+    MPI_Irecv( rowBelow, 1,MPI_FLOAT, rank_down, 0,comm2d, requests+irequest++);
   }
-
-	smooth(x, y, colLeft, colRight, colUp, colDown, n, a, b, c);
+  smooth(x, y, colLeft, colRight, rowAbove, rowBelow, n, a, b, c);
 
   times[3] = gtod_timer();
 
@@ -250,15 +254,15 @@ int main( int argc, char *argv[] )
 	uint64_t countytot = 0;
 
 
-	count(my_coord, gridSize, y, n, t, &county);
+	count(my_coord, gridSize, x, n, t, &countx);
 
-  MPI_Reduce(&countx,&countxtot,1, MPI_INTEGER, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&countx,&countxtot,1, MPI_INTEGER, MPI_SUM, 0, comm2d);
 
   times[4] = gtod_timer();
 
   count(my_coord, gridSize, y, n, t, &county);
 
-  MPI_Reduce(&county,&countytot,1, MPI_INTEGER, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&county,&countytot,1, MPI_INTEGER, MPI_SUM, 0, comm2d);
 
   times[5] = gtod_timer();
 
@@ -270,13 +274,13 @@ int main( int argc, char *argv[] )
         	printf("Number of inner elements in a row/column:    %u\n", n-2);
         	printf("Total number of elements:                    %lu\n", n*n);
         	printf("Total number of inner elements:              %lu\n", (n-2)*(n-2));
-        	printf("Memory used per array:                       %lu\n", memNeeded);
+        	printf("Memory used per process:                     %lu\n", memPerProc);
         	printf("Threshold:                                   %1.2f\n", t);
         	printf("Smoothing constants (a,b,c)                  %1.2f %1.2f %1.2f\n", a,b,c);
-        	printf("Number   of elements below threshold (x)     %u\n", countx);
-        	printf("Fraction of elements below threshold (x)     %1.8f\n",(float)countx/n/n);
-        	printf("Number   of elements below threshold (y)     %u\n", county);
-        	printf("Fraction of elements below threshold (y)     %1.8f\n",(float)county/(n-2)/(n-2));
+        	printf("Number   of elements below threshold (x)     %u\n", countxtot);
+        	printf("Fraction of elements below threshold (x)     %1.8f\n",(float)countxtot/n/n/numprocs);
+        	printf("Number   of elements below threshold (y)     %u\n", countytot);
+        	printf("Fraction of elements below threshold (y)     %1.8f\n",(float)countytot/n/n/numprocs);
 
   	printf ("Process         time(s)    resolution: 1.0e-04\n");
         	printf ("-----------------------\n");
