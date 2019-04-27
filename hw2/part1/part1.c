@@ -25,7 +25,7 @@ double gtod_timer(){
 void initialize(float *arr, uint64_t n){
         for (uint64_t i = 0; i < n; i++)
         {
-         
+
 		arr[i] = rand()/(float)RAND_MAX;
         	//if (i%10 == 0) printf("next random number in spot %d is  %f\n",i, arr[i]);
 	}
@@ -114,7 +114,7 @@ int main( int argc, char *argv[] )
   MPI_Init(&argc,&argv);
   MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-  
+
   printf("Hello world from %d of %d processors\n",myid, numprocs);
   int gridSize = sqrt(numprocs);
 
@@ -155,9 +155,9 @@ int main( int argc, char *argv[] )
 		//for each process, make a random array and send it
 
 		for (int islave = 1; islave < numprocs; islave++) {
-		
+
 			initialize(x, elementsPerProc);
-		
+
 			MPI_Ssend(x, elementsPerProc, MPI_INTEGER, islave, MTAG1, comm2d);
 		}
 
@@ -165,9 +165,9 @@ int main( int argc, char *argv[] )
     	initialize(x, elementsPerProc);
 
 	} else {
-		
+
 		MPI_Recv(x, elementsPerProc, MPI_INTEGER, 0, MTAG1, comm2d, &status);
-		
+
 	}
   //end of initialization kernel a
   times[2] = gtod_timer();
@@ -266,10 +266,31 @@ int main( int argc, char *argv[] )
 
   times[5] = gtod_timer();
 
+  double time1 = times[1] - times[0];
+  double time2 = times[2] - times[1];
+  double time3 = times[3] - times[2];
+  double time4 = times[4] - times[3];
+  double time5 = times[5] - times[4];
+  double time6 = times[6] - times[5];
+
+  double time1tot;
+  double time2tot;
+  double time3tot;
+  double time4tot;
+  double time5tot;
+  double time6tot;
+
+  MPI_Reduce(&time1,&time1tot,1, MPI_DOUBLE, MPI_SUM, 0, comm2d);
+  MPI_Reduce(&time2,&time2tot,1, MPI_DOUBLE, MPI_SUM, 0, comm2d);
+  MPI_Reduce(&time3,&time3tot,1, MPI_DOUBLE, MPI_SUM, 0, comm2d);
+  MPI_Reduce(&time4,&time4tot,1, MPI_DOUBLE, MPI_SUM, 0, comm2d);
+  MPI_Reduce(&time5,&time5tot,1, MPI_DOUBLE, MPI_SUM, 0, comm2d);
+  MPI_Reduce(&time6,&time6tot,1, MPI_DOUBLE, MPI_SUM, 0, comm2d);
+
 	if (myid == 0) {
 		printf("Summary\n");
         	printf("-----------------------------------------------\n");
-        	printf("Number of threads used in parallel region:   %u\n", numprocs);
+        	printf("Number of MPI Tasks:                         %u\n", numprocs);
         	printf("Number of elements in a row/column:          %u\n", n);
         	printf("Number of inner elements in a row/column:    %u\n", n-2);
         	printf("Total number of elements:                    %lu\n", n*n);
@@ -284,12 +305,12 @@ int main( int argc, char *argv[] )
 
   	printf ("Process         time(s)    resolution: 1.0e-04\n");
         	printf ("-----------------------\n");
-        	printf ("Allocate-x:     %4.3f\n", times[0]-start);
-        	printf ("Allocate-y:     %4.3f\n", times[1]-times[0]);
-        	printf ("Initialize-x:   %4.3f\n", times[2]-times[1]);
-        	printf ("Smooth:         %4.3f\n", times[3]-times[2]);
-        	printf ("Count-x:        %4.3f\n", times[4]-times[3]);
-        	printf ("Count-y:        %4.3f\n", times[5]-times[4]);
+        	printf ("Allocate-x:     %4.3f\n", time1tot/numprocs);
+        	printf ("Allocate-y:     %4.3f\n", time2tot/numprocs);
+        	printf ("Initialize-x:   %4.3f\n", time3tot/numprocs);
+        	printf ("Smooth:         %4.3f\n", time4tot/numprocs);
+        	printf ("Count-x:        %4.3f\n", time5tot/numprocs);
+        	printf ("Count-y:        %4.3f\n", time6tot/numprocs);
 	}
 
 	MPI_Finalize();
